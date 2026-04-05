@@ -3,3 +3,5 @@ data/dataset_30points_larger_300_part1.csv filter=lfs diff=lfs merge=lfs -text
 data/dataset_30points_larger_300_part2.csv filter=lfs diff=lfs merge=lfs -text
 data/datasetk2_30points_Test_100_ap4.csv filter=lfs diff=lfs merge=lfs -text
 data/datasetk2_30points_Test_100_sly.csv filter=lfs diff=lfs merge=lfs -text
+data_generated//Users/milad/Desktop/Neutronstar_FINAL/dataset_30points_larger300_ap4.csv filter=lfs diff=lfs merge=lfs -text
+data_generated/*.csv filter=lfs diff=lfs merge=lfs -text
