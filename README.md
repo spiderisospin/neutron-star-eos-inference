@@ -2,35 +2,62 @@
 
 This project studies an inverse inference problem: recovering the underlying
 equation-of-state parameters of neutron star matter from observable quantities
-(mass, radius, tidal deformability).
+(mass, radius, tidal love number). This is useful because neutron-star cores reach matter densities that cannot be reproduced in terrestrial experiments, so constraining the EoS can provide insight into the behaviour of strongly interacting matter under extreme conditions.
+
 
 Our simulation pipeline generates ~260k noisy synthetic observations by sampling
 candidate equations of state and solving the Tolman–Oppenheimer–Volkoff (TOV)
 equations. Machine learning models are trained to infer physical parameters
 from noisy observations and to quantify predictive uncertainty.
 
-Technical stack
-- Python, NumPy, SciPy
-- PyTorch
-- Scientific computing and numerical simulation
+## Technical stack
 
-Machine learning
-- Neural networks for classification and regression
-- Bayesian regression for uncertainty estimation
-- Feature importance analysis
+| Area                 | Tools and methods                                                        |
+| -------------------- | ------------------------------------------------------------------------ |
+| Programming          | Python, NumPy, SciPy                                                     |
+| Deep learning        | PyTorch; neural networks for classification and regression               |
+| Uncertainty          | Bayesian regression for predictive-uncertainty estimation                |
+| Scientific computing | Numerical integration of the TOV equations; synthetic dataset generation |
+| Simulation scale     | Approximately 260,000 noisy observation samples                          |
+| Analysis             | Feature-importance analysis                                              |
 
-Computational methods
-- Numerical integration of differential equations (TOV solver)
-- Synthetic dataset generation
-- Large-scale simulation (~260k neutron star models per data set)
 
-## Overview
+## Pipeline overview
 
-Neutron stars connect observable astrophysical quantities with the physics of matter at various density regions. Their internal structure is determined by the equation of state (EoS), which relates pressure $p$ and energy density $\varepsilon$. If the EoS is known, global properties such as the stellar mass $M$, radius $R$, and tidal deformability $k_2$ can be obtained by solving the TOV equations.
+Neutron stars connect observable astrophysical quantities with the physics of matter at various density regions. Their internal structure is determined by the equation of state (EoS), which relates pressure $p$ and energy density $\varepsilon$. If the EoS is known, global properties such as the stellar mass $M$, radius $R$, and tidal love number $k_2$ can be obtained by solving the TOV equations.
 
-The project reproduces and extends the deep-learning-based EoS inference framework introduced by Ventagli and Saltas. Parts of the pipeline are inspired by the NS_CC_ML repository (https://github.com/GiuliaVentagli/NS_CC_ML), while the data-generation pipeline and various other components are implemented independently.
+The project reproduces and extends the deep-learning-based EoS inference framework introduced by Ventagli and Saltas. Parts of the pipeline are inspired by the [NS_CC_ML repository](https://github.com/GiuliaVentagli/NS_CC_ML), while the data-generation pipeline and other components are implemented independently.
+
+```mermaid
+flowchart LR
+    A[Sample EoS parameters] --> B[Generate synthetic data<br/>Solve TOV equations]
+    B --> C[Synthetic observables<br/>M-R samples, radius, tidal deformability]
+    C --> D[Dataset]
+    D --> E[Train NN / Bayesian NN]
+    E --> F[Predict EoS type<br/>and parameters]
+    F --> G[Reconstruct EoS]
+    G --> H[Validate<br/>TOV solver and M-R curves]
+```
+*Figure 1. Overview of the simulation-based EoS inference pipeline. Sampled EoS parameters are used to generate synthetic neutron-star observables by solving the TOV equations. Neural models then infer EoS type and parameters, after which the reconstructed EoS is validated through the corresponding mass–radius curves.*
 
 ## Method
+
+### Theoretical background
+
+A neutron star is modelled as a static, spherically symmetric perfect-fluid configuration. Its internal structure follows from the Tolman–Oppenheimer–Volkoff (TOV) equations, which map an equation of state (EoS), $p(\varepsilon)$, to observable mass–radius relations and tidal Love numbers:
+
+$$
+\mathrm{EoS} \longrightarrow (M, R, k_2).
+$$
+
+The high-density EoS is parameterised through the squared speed of sound,
+
+$$
+c_s^2(\varepsilon) = \frac{dp}{d\varepsilon}, \qquad 0 \leq c_s^2 \leq 1,
+$$
+
+where the bound enforces causality. The inference task reverses this mapping: simulated noisy observables $(M, R, k_2)$ are used to infer the underlying EoS parameters and possible phase-transition behaviour.
+
 
 **Data generation**
 
@@ -42,7 +69,7 @@ Supervised neural networks are trained to infer properties of the neutron star e
 
 ## Results
 
-The classification model identifies the low-density equation of state with a test accuracy of around **92%**, exceeding the performance of around **87%** reported in the original study.
+The classification model identifies the low-density EoS with approximately 92% test accuracy under the evaluation setup used in this repository. This is broadly consistent with, and numerically higher than, the approximately 87% accuracy reported for a related setup in the reference study. This is not intended as a controlled benchmark comparison, since the evaluation configurations are not identical.
 
 For the high-density region, (Bayesian) regression results are comparable to the reference work. The regression model recovers large-scale trends in the speed-of-sound profile but smooths out oscillatory structure, indicating limited information content in $(M,R,k_2)$ observations.
 
@@ -50,17 +77,10 @@ This reflects a fundamental limitation of the problem: the mapping from the EoS 
 
 ## Repository structure
 
-**data_generated/**:
-    Folder containing generated synthetic neutron star datasets using generate_data.ipynb.
+## Repository structure
 
-**data_reference/**:
-    Folder containing reference EOS data required for the data-generation pipeline.
-
-**src/**:
-    Folder containing model implementations, plotting utilities and helper functions.
-
-**generate_data.ipynb**:
-    Pipeline for generating synthetic neutron star observations.
-
-**eos_inference_pipeline.ipynb**:
-    Machine learning pipeline for equation-of-state inference.
+- `data_generated/` — generated synthetic datasets produced by `generate_data.ipynb`.
+- `data_reference/` — reference EoS tables required for data generation.
+- `src/` — model implementations, plotting utilities and helper functions.
+- `generate_data.ipynb` — synthetic-observation generation pipeline.
+- `eos_inference_pipeline.ipynb` — model training and EoS-inference evaluation.
