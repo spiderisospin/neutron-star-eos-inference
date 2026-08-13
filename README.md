@@ -77,8 +77,6 @@ This reflects a fundamental limitation of the problem: the mapping from the EoS 
 
 ## Repository structure
 
-## Repository structure
-
 - `data_generated/` — generated synthetic datasets produced by `generate_data.ipynb`.
 - `data_reference/` — reference EoS tables required for data generation.
 - `src/` — model implementations, plotting utilities and helper functions.
