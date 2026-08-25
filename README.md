@@ -1,25 +1,19 @@
 # Neutron Star Equation of State Inference
 
-This project studies an inverse inference problem: recovering the underlying
-equation-of-state parameters of neutron star matter from observable quantities
-(mass, radius, tidal love number). This is useful because neutron-star cores reach matter densities that cannot be reproduced in terrestrial experiments, so constraining the EoS can provide insight into the behaviour of strongly interacting matter under extreme conditions.
+This project investigates the inverse stellar structure problem: inferring the equation of state (EoS) of neutron-star matter from observable quantities such as mass $M$, radius $R$, and tidal Love number $k_2$. We distinguish between a low-density outer region and a high-density inner region, which are treated as separate inference tasks.
 
-
-Our simulation pipeline generates ~260k noisy synthetic observations by sampling
-candidate equations of state and solving the Tolman–Oppenheimer–Volkoff (TOV)
-equations. Machine learning models are trained to infer physical parameters
-from noisy observations and to quantify predictive uncertainty.
+We generate approximately 260,000 noisy synthetic observations by sampling candidate equations of state and solving the Tolman–Oppenheimer–Volkoff (TOV) equations. Neural networks are then used to reconstruct properties of the underlying EoS. The low-density EoS (AP4 or SLy) can be distinguished reliably through classification, while reconstruction of the high-density speed-of-sound profile is limited by degeneracy in the inverse mapping. Bayesian regression is additionally used to quantify uncertainties in the high-density reconstruction.
 
 ## Technical stack
 
-| Area                 | Tools and methods                                                        |
-| -------------------- | ------------------------------------------------------------------------ |
-| Programming          | Python, NumPy, SciPy                                                     |
-| Deep learning        | PyTorch; neural networks for classification and regression               |
-| Uncertainty          | Bayesian regression for predictive-uncertainty estimation                |
-| Scientific computing | Numerical integration of the TOV equations; synthetic dataset generation |
-| Simulation scale     | Approximately 260,000 noisy observation samples                          |
-| Analysis             | Feature-importance analysis                                              |
+| Area | Tools and methods |
+| --- | --- |
+| Programming | Python, NumPy, SciPy |
+| Machine learning | PyTorch (classification and regression) |
+| Uncertainty | Bayesian regression |
+| Scientific computing | numerical TOV integration, interpolation, synthetic data generation |
+| Data | ~260,000 noisy synthetic observations |
+| Analysis | Feature importance, model validation |
 
 
 ## Pipeline overview
@@ -31,7 +25,7 @@ The project reproduces and extends the deep-learning-based EoS inference framewo
 ```mermaid
 flowchart LR
     A[Sample EoS parameters] --> B[Generate synthetic data<br/>Solve TOV equations]
-    B --> C[Synthetic observables<br/>M-R samples, radius, tidal deformability]
+    B --> C[Synthetic observables<br/>M-R samples, tidal deformability]
     C --> D[Dataset]
     D --> E[Train NN / Bayesian NN]
     E --> F[Predict EoS type<br/>and parameters]
@@ -42,7 +36,7 @@ flowchart LR
 
 ## Method
 
-### Theoretical background
+### Physical model
 
 A neutron star is modelled as a static, spherically symmetric perfect-fluid configuration. Its internal structure follows from the Tolman–Oppenheimer–Volkoff (TOV) equations, which map an equation of state (EoS), $p(\varepsilon)$, to observable mass–radius relations and tidal Love numbers:
 
@@ -58,22 +52,35 @@ $$
 
 where the bound enforces causality. The inference task reverses this mapping: simulated noisy observables $(M, R, k_2)$ are used to infer the underlying EoS parameters and possible phase-transition behaviour.
 
-
 **Data generation**
 
-Candidate equations of state are sampled and used to generate neutron star models by numerically solving the TOV equations. From these solutions, observable quantities $(M,R,k_2)$ are sampled and Gaussian noise injections are added, representing measurement noise.
+Candidate equations of state are sampled and used to generate neutron star models by numerically solving the TOV equations. From these solutions, observable quantities $(M,R,k_2)$ are sampled and Gaussian noise is injected to the data, representing measurement noise.
 
 **Inference models**
 
-Supervised neural networks are trained to infer properties of the neutron star equation of state from observable quantities $(M,R,k_2)$. Separate models identify properties of the low-density region and estimate parameters governing the higher-density regime. Feature-importance analysis is used to evaluate the contribution of each observable. Furthermore, a probabilistic model is implemented to estimate predictive uncertainties.
+Two inference tasks are considered. A classification network distinguishes between the AP4 and SLy models describing the low-density outer region. A regression network attempts to reconstruct the high-density EoS through its speed-of-sound parametrization. Bayesian regression is used to estimate uncertainty in the high-density reconstruction.
 
 ## Results
 
-The classification model identifies the low-density EoS with approximately 92% test accuracy under the evaluation setup used in this repository. This is broadly consistent with, and numerically higher than, the approximately 87% accuracy reported for a related setup in the reference study. This is not intended as a controlled benchmark comparison, since the evaluation configurations are not identical.
+The classification model identifies the low-density EoS with approximately 91% test accuracy under the evaluation setup used in this repository. This is broadly consistent with the approximately 87% accuracy reported in the reference study. This is not intended as a controlled benchmark comparison, since the evaluation configurations are not identical.
 
-For the high-density region, (Bayesian) regression results are comparable to the reference work. The regression model recovers large-scale trends in the speed-of-sound profile but smooths out oscillatory structure, indicating limited information content in $(M,R,k_2)$ observations.
+For the high-density region, the regression results are comparable to the reference work. The model namely obtains a weaker signal. Rather than reconstructing the detailed speed-of-sound profile, its predictions tend toward a smoothed mean profile.
 
-This reflects a fundamental limitation of the problem: the mapping from the EoS to observables compresses a large amount of microscopic information into a small set of macroscopic parameters $(M,R,k_2)$, leading to degeneracies in the inverse reconstruction. In astrophysics, this phenomenon is known as the inverse stellar structure problem.
+The weaker reconstruction results from the degeneracy of the inverse stellar structure problem. The mapping from the EoS to observables compresses the detailed internal structure of the star into a small number of global quantities. For example, the total stellar mass is given by
+
+```math
+M = 4\pi \int_0^R r^2 \varepsilon(r)\,dr.
+```
+
+Different internal energy-density profiles can produce approximately the same global observables. In particular,
+
+```math
+\varepsilon_1(r) \neq \varepsilon_2(r),
+\qquad
+\int_0^R r^2 \left[\varepsilon_1(r)-\varepsilon_2(r)\right]\,dr \approx 0.
+```
+
+This degeneracy makes the detailed high-density EOS difficult to recover from $(M,R,k_2)$ alone.
 
 ## Repository structure
 
