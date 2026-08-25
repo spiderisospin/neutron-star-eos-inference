@@ -9,7 +9,7 @@ We generate approximately 260,000 noisy synthetic observations by sampling candi
 | Area | Tools and methods |
 | --- | --- |
 | Programming | Python, NumPy, SciPy |
-| Machine learning | PyTorch (classification and regression) |
+| Machine learning | TensorFlow (classification and regression) |
 | Uncertainty | Bayesian regression |
 | Scientific computing | numerical TOV integration, interpolation, synthetic data generation |
 | Data | ~260,000 noisy synthetic observations |
@@ -32,7 +32,7 @@ flowchart LR
     F --> G[Reconstruct EoS]
     G --> H[Validate<br/>TOV solver and M-R curves]
 ```
-*Figure 1. Overview of the simulation-based EoS inference pipeline. Sampled EoS parameters are used to generate synthetic neutron-star observables by solving the TOV equations. Neural models then infer EoS type and parameters, after which the reconstructed EoS is validated through the corresponding mass–radius curves.*
+*Figure 1. Overview of the simulation-based EoS inference pipeline. Sampled EoS parameters are used to generate synthetic neutron-star observables by solving the TOV equations. Neural networks then infer EoS type and parameters, after which the reconstructed EoS is validated by the corresponding mass–radius curves.*
 
 ## Method
 
@@ -58,13 +58,17 @@ Candidate equations of state are sampled and used to generate neutron star model
 
 **Inference models**
 
-Two inference tasks are considered. A classification network distinguishes between the AP4 and SLy models describing the low-density outer region. A regression network attempts to reconstruct the high-density EoS through its speed-of-sound parametrization. Bayesian regression is used to estimate uncertainty in the high-density reconstruction.
+Two inference tasks are considered. A classification network distinguishes between the AP4 and SLy models describing the low-density outer region. A regression network attempts to reconstruct the high-density EoS through its speed-of-sound parameterization, defined by interpolation nodes $(M_i, c_{s,i})$, where $M_i$ specifies the (mass) node location and $c_{s,i}$ its corresponding speed of sound. Bayesian regression is used to estimate uncertainty in the high-density reconstruction.
 
 ## Results
 
 The classification model identifies the low-density EoS with approximately 91% test accuracy under the evaluation setup used in this repository. This is broadly consistent with the approximately 87% accuracy reported in the reference study. This is not intended as a controlled benchmark comparison, since the evaluation configurations are not identical.
 
-For the high-density region, the regression results are comparable to the reference work. The model namely obtains a weaker signal. Rather than reconstructing the detailed speed-of-sound profile, its predictions tend toward a smoothed mean profile.
+For the high-density region, the regression results are again comparable to the reference work. The model namely obtains a weaker signal. Rather than reconstructing the detailed speed-of-sound profile, its predictions tend toward a smoothed mean profile.
+
+Bayesian regression further shows that the uncertainty is not uniform across the high-density EoS parameterization. The inferred speed-of-sound parameters $c_{s,i}$ show broader predictive distributions than the corresponding mass parameters $M_i$, indicating that the speed-of-sound values are less strongly constrained by our observables.
+
+As for model validation, the reconstructed EoSs are passed back through the TOV solver. The predicted mass–radius and $k_2$–mass curves generally follow the true curves, with larger deviations at higher masses where the high-density EoS becomes more relevant. This is the case because more massive stars reach higher central pressures and therefore probe the less accurately reconstructed high-density EoS.
 
 The weaker reconstruction results from the degeneracy of the inverse stellar structure problem. The mapping from the EoS to observables compresses the detailed internal structure of the star into a small number of global quantities. For example, the total stellar mass is given by
 
