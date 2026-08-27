@@ -15,6 +15,21 @@ We generate approximately 260,000 noisy synthetic observations by sampling candi
 | Data | ~260,000 noisy synthetic observations |
 | Analysis | Feature importance, model validation |
 
+## Running the project
+
+Clone the repository and install the dependencies in a virtual environment:
+
+```bash
+git clone https://github.com/spiderisospin/neutron-star-eos-inference.git
+cd neutron-star-eos-inference
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+jupyter notebook
+```
+
+Open `eos_inference_pipeline.ipynb` (or `generate_data.ipynb` to regenerate the datasets) and select the `.venv` environment as the Jupyter kernel before running the notebook.
+
 
 ## Pipeline overview
 
