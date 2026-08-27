@@ -1,0 +1,14 @@
+numpy
+pandas
+matplotlib
+scipy
+scikit-learn
+statsmodels
+numba
+sympy
+Pillow
+tensorflow
+tensorflow-probability
+tf-keras
+jupyter
+ipykernel
